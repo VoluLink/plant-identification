@@ -1,0 +1,46 @@
+services:
+  main:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: app_container/app_containerfile
+    volumes:
+      - ./app_container:/app_container:z
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "9000:9000"
+  blurring:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: blur_container/blur_containerfile
+    volumes:
+      - ./blur_container:/blur_container:z
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "9001:9001"
+  identification:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ident_container/ident_containerfile
+    volumes:
+      - ./ident_container:/ident_container:z
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "9002:9002"
+  rag:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: rag_container/rag_containerfile
+    volumes:
+      - ./rag_container:/rag_container:z
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+    ports:
+      - "9003:9003"

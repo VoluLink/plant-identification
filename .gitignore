@@ -1,0 +1,11 @@
+venv
+bilder
+apiToken.txt
+torch*
+triton*
+__pycache__
+chroma_langchain_db
+bilder
+.venv
+openaiKey.txt
+.env

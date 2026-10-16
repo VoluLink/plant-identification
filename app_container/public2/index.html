@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pflanzen</title>
+    <link rel="stylesheet" href="public/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  </head>
+  <body>
+    <h1 class="title is-1">Pflanzen-Chatbot</h1>
+
+    <div id="cameraBox" style="display: none; margin-top: 20px">
+      <video id="video" autoplay></video>
+      <button class="button is-danger mt-2" onclick="takePhoto()">Take Photo</button>
+      <button class="button mt-2" onclick="stopCamera()">Close</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+
+    <div class="chat-container">
+      <div id="previewBar" class="preview-bar"></div>
+      <div class="chat-input-wrapper" id="chatBox">
+        <!-- Left button -->
+        <div class="dropdown is-up chat-dropdown" id="myDropdown">
+          <div class="dropdown-trigger">
+            <button class="button" aria-haspopup="true">
+              <span class="icon is-small">
+                <i class="fas fa-angle-up"></i>
+              </span>
+            </button>
+          </div>
+
+          <div class="dropdown-menu">
+            <div class="dropdown-content">
+              <!-- FILE UPLOAD -->
+              <a class="dropdown-item">
+                <div class="file is-small">
+                  <label class="file-label">
+                    <input id="fileInput" class="file-input" type="file" name="resume" />
+                    <span class="file-cta">
+                      <span class="file-icon">
+                        <i class="fas fa-upload"></i>
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </a>
+              <a class="dropdown-item" onclick="toggleSound()">
+                <div class="file is-small">
+                  <label class="file-label">
+                    <span class="file-cta">
+                      <span class="file-icon">
+                        <i id="soundIcon" class="fas fa-volume-up"></i>
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </a>
+              <!-- CAMERA -->
+              <a class="dropdown-item" onclick="openCamera()">
+                <div class="file is-small">
+                  <label class="file-label">
+                    <span class="file-cta">
+                      <span class="file-icon">
+                        <i class="fas fa-camera"></i>
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </a>
+              <!-- THEME -->
+              <a class="dropdown-item">
+                <!-- maybe adjust from button to onlick function for similiar look -->
+                <div class="file is-small">
+                  <label class="file-label">
+                    <span class="file-cta">
+                      <span class="file-icon">
+                        <button id="themeToggle" class="button is-small">🌙</button>
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Textarea -->
+        <textarea class="chat-textarea" placeholder="Message..."></textarea>
+
+        <!-- Send button -->
+        <button class="button" id="submitBtn" type="button" disabled>
+          <span class="icon is-small">
+            <img class="submit-button" src="public/sendImage.svg" alt="submit" />
+          </span>
+        </button>
+      </div>
+    </div>
+  </body>
+
+  <script src="public/index.js"></script>
+</html>

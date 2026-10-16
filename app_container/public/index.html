@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>PlantIdent</title>
+
+<style>
+:root{
+    --primary:#2E7D32;
+    --primary-hover:#256428;
+    --secondary:#f5f7fa;
+    --border:#d7dde5;
+    --text:#1f2937;
+    --selected:#1565C0;
+    --shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, Arial, sans-serif;
+}
+
+body{
+    background:#eef3f7;
+    color:var(--text);
+}
+
+.container{
+    max-width:1200px;
+    margin:40px auto;
+    padding:20px;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.header h1{
+    font-size:3rem;
+    color:var(--primary);
+}
+
+.card{
+    background:white;
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    padding:30px;
+}
+
+.upload-zone{
+    display:block;
+    width:100%;
+    border:3px dashed #bfc8d2;
+    border-radius:16px;
+    padding:40px;
+    text-align:center;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-active{
+    border-color:var(--primary);
+    background:#f8fbf8;
+}
+
+.upload-zone p{
+    color:#64748b;
+}
+
+#fileInput{
+    display:none;
+}
+
+.preview-wrapper{
+    display:flex;
+    gap:30px;
+    margin-top:30px;
+    flex-wrap:wrap;
+}
+
+.image-card{
+    flex:1;
+    min-width:280px;
+}
+
+.image-card h3{
+    margin-bottom:10px;
+}
+
+.image-box{
+    height:300px;
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:#fafafa;
+}
+
+.image-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.blurred{
+    filter:blur(8px);
+}
+
+.options{
+    margin-top:35px;
+}
+
+.options h3{
+    margin-bottom:15px;
+}
+
+.button-group{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.option-btn{
+    padding:14px 22px;
+    border:none;
+    border-radius:12px;
+    background:#e7edf3;
+    cursor:pointer;
+    transition:.25s;
+    font-size:1rem;
+}
+
+.option-btn:hover:not(:disabled){
+    transform:translateY(-2px);
+}
+
+.option-btn.active{
+    background:var(--selected);
+    color:white;
+}
+
+.option-btn:disabled{
+    cursor:not-allowed;
+    opacity:.65;
+}
+
+.option-btn.loading{
+    background:#cfd8e3;
+}
+
+.result{
+    margin-top:30px;
+    background:#f7fafc;
+    border-left:5px solid var(--primary);
+    padding:20px;
+    border-radius:12px;
+    display:none;
+}
+
+.result h3{
+    margin-bottom:12px;
+}
+
+.result-list{
+    list-style:none;
+    display:grid;
+    gap:10px;
+    margin-top:12px;
+}
+
+.result-item{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px;
+    background:white;
+}
+
+.result-meta{
+    color:#64748b;
+    font-size:.95rem;
+    margin-top:4px;
+}
+
+.result pre{
+    white-space:pre-wrap;
+    overflow:auto;
+    margin-top:12px;
+}
+
+.notice{
+    margin-top:15px;
+    color:#dc2626;
+    font-weight:600;
+}
+
+.chat-panel{
+    margin-top:30px;
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:#fbfdff;
+    overflow:hidden;
+    display:none;
+}
+
+.chat-panel.open{
+    display:block;
+}
+
+.chat-header{
+    padding:16px 18px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.chat-header h3{
+    font-size:1.1rem;
+}
+
+.chat-close{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:10px;
+    background:#e7edf3;
+    cursor:pointer;
+    font-size:1.2rem;
+}
+
+.chat-messages{
+    min-height:180px;
+    max-height:320px;
+    overflow-y:auto;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.chat-message{
+    max-width:78%;
+    padding:12px 14px;
+    border-radius:14px;
+    line-height:1.45;
+    white-space:pre-wrap;
+}
+
+.chat-message.user{
+    align-self:flex-end;
+    background:var(--selected);
+    color:white;
+}
+
+.chat-message.bot{
+    align-self:flex-start;
+    background:white;
+    border:1px solid var(--border);
+}
+
+.chat-message.error{
+    border-color:#fecaca;
+    background:#fff7f7;
+    color:#991b1b;
+}
+
+.chat-form{
+    border-top:1px solid var(--border);
+    padding:14px;
+    display:flex;
+    gap:12px;
+}
+
+.chat-form textarea{
+    flex:1;
+    min-height:48px;
+    max-height:140px;
+    resize:vertical;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px;
+}
+
+.chat-form button{
+    border:none;
+    border-radius:12px;
+    padding:0 22px;
+    background:var(--primary);
+    color:white;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.chat-form button:disabled{
+    cursor:not-allowed;
+    opacity:.65;
+}
+
+@media(max-width:768px){
+    .header h1{
+        font-size:2rem;
+    }
+
+    .chat-form{
+        flex-direction:column;
+    }
+
+    .chat-form button{
+        min-height:44px;
+    }
+}
+
+/* Documents Modal Styling */
+.docs-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: 0.3s;
+    font-weight: 600;
+}
+
+.docs-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--text);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: var(--text);
+}
+
+.modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+#documentsList {
+    min-height: 100px;
+}
+
+.docs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.docs-table thead th {
+    background: var(--secondary);
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+}
+
+.docs-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.docs-table tbody tr:hover {
+    background: var(--secondary);
+}
+
+.docs-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.docs-count {
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--primary);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🌿 PlantIdent</h1>
+        <p>Pflanzen erkennen, Gesundheitszustand analysieren und weitere Informationen abrufen.</p>
+        <button class="docs-btn" id="docsBtn" title="Hochgeladene RAG-Dokumente anzeigen">
+            <i class="icon-docs">📄</i>
+        </button>
+    </div>
+
+    <!-- Documents Modal -->
+    <div id="documentsModal" class="modal-overlay" onclick="closeDocumentsModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>RAG Dokumente</h3>
+                <button class="modal-close" onclick="closeDocumentsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="documentsList">
+                    <p>Lade Dokumente...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+
+        <label class="upload-zone" id="uploadZone" for="fileInput">
+            <h2>Bild hochladen</h2>
+            <p>Klicken oder Datei hier ablegen</p>
+        </label>
+
+        <input type="file" id="fileInput" accept="image/*">
+
+        <div class="notice" id="notice"></div>
+
+        <div class="preview-wrapper">
+
+            <div class="image-card">
+                <h3>Originalbild</h3>
+                <div class="image-box">
+                    <img id="originalPreview">
+                </div>
+            </div>
+
+            <div class="image-card">
+                <h3>Anonymisierte Vorschau</h3>
+                <div class="image-box">
+                    <img id="blurPreview" class="blurred">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="options">
+
+            <h3>Analyse auswählen</h3>
+
+            <div class="button-group">
+
+                <button class="option-btn" id="plantBtn" type="button">
+                    Pflanzenart bestimmen
+                </button>
+
+                <button class="option-btn" id="healthBtn" type="button">
+                    Gesundheitszustand
+                </button>
+
+                <button class="option-btn" id="infoBtn" type="button">
+                    Weitere Informationen
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="result" id="result">
+            Analyse wird an den Server gesendet...
+        </div>
+
+        <section class="chat-panel" id="chatPanel" aria-label="Weitere Informationen">
+            <div class="chat-header">
+                <h3>Weitere Informationen</h3>
+                <button class="chat-close" id="closeChatBtn" type="button" aria-label="Chat schliessen">x</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message bot">
+                    Stelle eine Frage zu Pflanzen, Pflege, Krankheiten oder Sorten.
+                </div>
+            </div>
+
+            <form class="chat-form" id="chatForm">
+                <textarea id="chatInput" placeholder="Frage zu einer Pflanze eingeben..."></textarea>
+                <button id="chatSendBtn" type="submit">Senden</button>
+            </form>
+        </section>
+
+    </div>
+
+</div>
+
+<script>
+
+const API_BASE_URL =
+    window.location.protocol === "file:" ? "http://localhost:9000" : "";
+const RAG_ENDPOINT = "/rag/query";
+
+const fileInput = document.getElementById("fileInput");
+const uploadZone = document.getElementById("uploadZone");
+const originalPreview = document.getElementById("originalPreview");
+const blurPreview = document.getElementById("blurPreview");
+const result = document.getElementById("result");
+const notice = document.getElementById("notice");
+const plantBtn = document.getElementById("plantBtn");
+const healthBtn = document.getElementById("healthBtn");
+const infoBtn = document.getElementById("infoBtn");
+const chatPanel = document.getElementById("chatPanel");
+const closeChatBtn = document.getElementById("closeChatBtn");
+const chatMessages = document.getElementById("chatMessages");
+const chatForm = document.getElementById("chatForm");
+const chatInput = document.getElementById("chatInput");
+const chatSendBtn = document.getElementById("chatSendBtn");
+
+let currentFile = null;
+let originalObjectUrl = null;
+let blurredBlob = null;
+let blurredObjectUrl = null;
+let blurPromise = null;
+let lastPlantName = "";
+
+function apiUrl(path){
+    if(path.startsWith("http")){
+        return path;
+    }
+
+    return API_BASE_URL + path;
+}
+
+function escapeHtml(value){
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function formatProbability(value){
+    const number = Number(value);
+
+    if(!Number.isFinite(number)){
+        return "";
+    }
+
+    return `${Math.round(number * 100)}%`;
+}
+
+function setNotice(message, isError = false){
+    notice.textContent = message;
+    notice.style.color = isError ? "#dc2626" : "#256428";
+}
+
+function setResult(html){
+    result.style.display = "block";
+    result.innerHTML = html;
+}
+
+function setError(message){
+    setResult(`
+        <h3>Fehler</h3>
+        <p>${escapeHtml(message)}</p>
+    `);
+}
+
+function setLoading(button, isLoading, label){
+    button.disabled = isLoading;
+    button.classList.toggle("loading", isLoading);
+
+    if(isLoading){
+        button.dataset.originalLabel = button.textContent.trim();
+        button.textContent = label;
+    }else if(button.dataset.originalLabel){
+        button.textContent = button.dataset.originalLabel;
+        delete button.dataset.originalLabel;
+    }
+}
+
+function setActiveButton(button){
+    document.querySelectorAll(".option-btn")
+        .forEach(btn => btn.classList.remove("active"));
+    button.classList.add("active");
+}
+
+function resetAnalysisState(){
+    document.querySelectorAll(".option-btn")
+        .forEach(btn => btn.classList.remove("active"));
+    result.style.display = "none";
+    result.innerHTML = "";
+}
+
+function requireImage(){
+    if(currentFile){
+        return true;
+    }
+
+    setError("Bitte zuerst ein Bild hochladen.");
+    return false;
+}
+
+async function readError(response){
+    const text = await response.text();
+    return text || `${response.status} ${response.statusText}`;
+}
+
+async function blurCurrentImage(){
+    if(!currentFile){
+        throw new Error("Kein Bild ausgewaehlt.");
+    }
+
+    if(blurredBlob){
+        return blurredBlob;
+    }
+
+    if(blurPromise){
+        return blurPromise;
+    }
+
+    const formData = new FormData();
+    formData.append("file", currentFile, currentFile.name || "upload.jpg");
+
+    blurPromise = fetch(apiUrl("/blur"), {
+        method:"POST",
+        body:formData
+    })
+    .then(async response => {
+        if(!response.ok){
+            throw new Error(`Blur-Service Fehler: ${await readError(response)}`);
+        }
+
+        blurredBlob = await response.blob();
+
+        if(blurredObjectUrl){
+            URL.revokeObjectURL(blurredObjectUrl);
+        }
+        blurredObjectUrl = URL.createObjectURL(blurredBlob);
+        blurPreview.src = blurredObjectUrl;
+        blurPreview.classList.remove("blurred");
+        setNotice("Bild wurde anonymisiert und ist bereit fuer die Analyse.");
+
+        return blurredBlob;
+    })
+    .finally(() => {
+        blurPromise = null;
+    });
+
+    return blurPromise;
+}
+
+async function uploadForAnalysis(endpoint){
+    const imageBlob = await blurCurrentImage();
+    const formData = new FormData();
+    formData.append("file", imageBlob, currentFile.name || "upload.jpg");
+
+    const response = await fetch(apiUrl(endpoint), {
+        method:"POST",
+        body:formData
+    });
+
+    if(!response.ok){
+        throw new Error(await readError(response));
+    }
+
+    return response.json();
+}
+
+function getPlantSuggestions(data){
+    return data?.response?.result?.classification?.suggestions
+        || data?.result?.classification?.suggestions
+        || data?.classification?.suggestions
+        || [];
+}
+
+function renderPlantResult(data){
+    if(typeof data?.response === "string"){
+        setResult(`
+            <h3>Pflanzenart</h3>
+            <p>${escapeHtml(data.response)}</p>
+        `);
+        return;
+    }
+
+    const suggestions = getPlantSuggestions(data);
+
+    if(!suggestions.length){
+        setResult(`
+            <h3>Pflanzenart</h3>
+            <p>Das Backend hat keine Pflanzenvorschlaege zurueckgegeben.</p>
+            <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+        `);
+        return;
+    }
+
+    const topPlant = suggestions[0];
+    lastPlantName = topPlant?.name || "";
+
+    const items = suggestions.slice(0, 5).map(plant => {
+        const name = escapeHtml(plant?.name || "Unbekannte Pflanze");
+        const probability = formatProbability(plant?.probability);
+        const commonNames = plant?.details?.common_names;
+        const commonText = Array.isArray(commonNames) && commonNames.length
+            ? `<div class="result-meta">Weitere Namen: ${escapeHtml(commonNames.join(", "))}</div>`
+            : "";
+
+        return `
+            <li class="result-item">
+                <strong>${name}</strong>
+                ${probability ? `<div class="result-meta">Wahrscheinlichkeit: ${probability}</div>` : ""}
+                ${commonText}
+            </li>
+        `;
+    }).join("");
+
+    setResult(`
+        <h3>Pflanzenart</h3>
+        <p>Wahrscheinlichste Bestimmung: <strong>${escapeHtml(lastPlantName)}</strong></p>
+        <ul class="result-list">${items}</ul>
+    `);
+
+    if(lastPlantName){
+        chatMessages.innerHTML = `
+            <div class="chat-message bot">
+                ${escapeHtml(lastPlantName)} wurde identifiziert. Stelle eine Frage zu dieser Pflanze.
+            </div>
+        `;
+    }
+}
+
+function getHealthData(data){
+    const responseResult = data?.response?.result || data?.result || data;
+    return {
+        isHealthy: responseResult?.is_healthy || responseResult?.health_assessment?.is_healthy,
+        diseases: responseResult?.disease?.suggestions
+            || responseResult?.health_assessment?.diseases
+            || responseResult?.diseases
+            || []
+    };
+}
+
+function renderHealthResult(data){
+    if(typeof data?.response === "string"){
+        setResult(`
+            <h3>Gesundheitszustand</h3>
+            <p>${escapeHtml(data.response)}</p>
+        `);
+        return;
+    }
+
+    const health = getHealthData(data);
+    const binary = health.isHealthy?.binary;
+    const probability = formatProbability(health.isHealthy?.probability);
+    const statusText = binary === true
+        ? "Die Pflanze wirkt gesund."
+        : binary === false
+            ? "Es wurden moegliche Gesundheitsprobleme erkannt."
+            : "Der Gesundheitsstatus konnte nicht eindeutig bestimmt werden.";
+
+    const diseaseItems = health.diseases.slice(0, 5).map(item => {
+        const name = escapeHtml(item?.name || item?.classification || "Unbekannter Hinweis");
+        const itemProbability = formatProbability(item?.probability);
+        const description = item?.details?.description
+            || item?.description
+            || "";
+
+        return `
+            <li class="result-item">
+                <strong>${name}</strong>
+                ${itemProbability ? `<div class="result-meta">Wahrscheinlichkeit: ${itemProbability}</div>` : ""}
+                ${description ? `<div class="result-meta">${escapeHtml(description)}</div>` : ""}
+            </li>
+        `;
+    }).join("");
+
+    setResult(`
+        <h3>Gesundheitszustand</h3>
+        <p><strong>${escapeHtml(statusText)}</strong></p>
+        ${probability ? `<p class="result-meta">Sicherheit der Einschaetzung: ${probability}</p>` : ""}
+        ${diseaseItems ? `<ul class="result-list">${diseaseItems}</ul>` : "<p class=\"result-meta\">Keine konkreten Krankheiten oder Schaeden gemeldet.</p>"}
+    `);
+}
+
+async function handleFile(file){
+    if(!file || !file.type.startsWith("image/")){
+        setError("Bitte eine Bilddatei auswaehlen.");
+        return;
+    }
+
+    currentFile = file;
+    blurredBlob = null;
+    lastPlantName = "";
+    resetAnalysisState();
+
+    if(originalObjectUrl){
+        URL.revokeObjectURL(originalObjectUrl);
+    }
+    if(blurredObjectUrl){
+        URL.revokeObjectURL(blurredObjectUrl);
+        blurredObjectUrl = null;
+    }
+
+    originalObjectUrl = URL.createObjectURL(file);
+    originalPreview.src = originalObjectUrl;
+    blurPreview.src = originalObjectUrl;
+    blurPreview.classList.add("blurred");
+
+    setNotice("Bild wird ueber das Backend anonymisiert...");
+
+    try{
+        await blurCurrentImage();
+    }catch(error){
+        setNotice(error.message, true);
+    }
+}
+
+fileInput.addEventListener("change", function(){
+    handleFile(this.files[0]);
+});
+
+["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+    uploadZone.addEventListener(eventName, event => {
+        event.preventDefault();
+        event.stopPropagation();
+    });
+});
+
+["dragenter", "dragover"].forEach(eventName => {
+    uploadZone.addEventListener(eventName, () => {
+        uploadZone.classList.add("drag-active");
+    });
+});
+
+["dragleave", "drop"].forEach(eventName => {
+    uploadZone.addEventListener(eventName, () => {
+        uploadZone.classList.remove("drag-active");
+    });
+});
+
+uploadZone.addEventListener("drop", event => {
+    handleFile(event.dataTransfer.files[0]);
+});
+
+plantBtn.addEventListener("click", async () => {
+    setActiveButton(plantBtn);
+    if(!requireImage()) return;
+
+    lastPlantName = "";
+    chatPanel.classList.remove("open");
+    setLoading(plantBtn, true, "Bestimme...");
+    setResult("<h3>Pflanzenart</h3><p>Analyse laeuft...</p>");
+
+    try{
+        const data = await uploadForAnalysis("/ident/plant_classification");
+        renderPlantResult(data);
+    }catch(error){
+        setError(`Pflanzenbestimmung fehlgeschlagen: ${error.message}`);
+    }finally{
+        setLoading(plantBtn, false);
+    }
+});
+
+healthBtn.addEventListener("click", async () => {
+    setActiveButton(healthBtn);
+    if(!requireImage()) return;
+
+    setLoading(healthBtn, true, "Pruefe...");
+    setResult("<h3>Gesundheitszustand</h3><p>Analyse laeuft...</p>");
+
+    try{
+        const data = await uploadForAnalysis("/ident/plant_health");
+        renderHealthResult(data);
+    }catch(error){
+        setError(`Gesundheitsanalyse fehlgeschlagen: ${error.message}`);
+    }finally{
+        setLoading(healthBtn, false);
+    }
+});
+
+infoBtn.addEventListener("click", () => {
+    setActiveButton(infoBtn);
+    chatPanel.classList.add("open");
+    chatInput.focus();
+});
+
+closeChatBtn.addEventListener("click", () => {
+    chatPanel.classList.remove("open");
+    infoBtn.classList.remove("active");
+});
+
+function addChatMessage(text, type = "bot"){
+    const message = document.createElement("div");
+    message.className = `chat-message ${type}`;
+    message.textContent = text;
+    chatMessages.appendChild(message);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return message;
+}
+
+function formatSource(source){
+    if(typeof source === "string"){
+        return source;
+    }
+
+    if(source?.Dokument || source?.Seite){
+        return `${source?.Dokument || "Quelle"}${source?.Seite ? `, Seite ${source.Seite}` : ""}`;
+    }
+
+    return source?.title || source?.name || source?.url || JSON.stringify(source);
+}
+
+function formatRagAnswer(data){
+    const answer = data?.answer
+        || data?.response
+        || data?.result?.answer
+        || data?.message
+        || "Das Backend hat keine Antwort zurueckgegeben.";
+    const sources = data?.sources
+        || data?.references
+        || data?.result?.sources
+        || data?.result?.references
+        || [];
+
+    if(!Array.isArray(sources) || sources.length === 0){
+        return String(answer);
+    }
+
+    const sourceText = sources
+        .map(formatSource)
+        .filter(Boolean)
+        .join("\n- ");
+
+    return `${answer}\n\nQuellen:\n- ${sourceText}`;
+}
+
+async function sendRagQuery(question){
+    const query = lastPlantName
+        ? `Pflanze: ${lastPlantName}\nFrage: ${question}`
+        : question;
+
+    const response = await fetch(apiUrl(RAG_ENDPOINT), {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify(query)
+    });
+
+    if(!response.ok){
+        throw new Error(await readError(response));
+    }
+
+    return response.json();
+}
+
+chatForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const question = chatInput.value.trim();
+    if(!question){
+        return;
+    }
+
+    addChatMessage(question, "user");
+    chatInput.value = "";
+    chatSendBtn.disabled = true;
+    const pendingMessage = addChatMessage("Antwort wird vom Backend geladen...", "bot");
+
+    try{
+        const data = await sendRagQuery(question);
+        pendingMessage.textContent = formatRagAnswer(data);
+    }catch(error){
+        pendingMessage.classList.add("error");
+        pendingMessage.textContent = error.message;
+    }finally{
+        chatSendBtn.disabled = false;
+        chatInput.focus();
+    }
+});
+
+chatInput.addEventListener("keydown", event => {
+    if(event.key === "Enter" && !event.shiftKey){
+        event.preventDefault();
+        chatForm.requestSubmit();
+    }
+});
+
+// ======================== Documents Management ===========================
+const docsBtn = document.getElementById("docsBtn");
+const documentsModal = document.getElementById("documentsModal");
+const documentsList = document.getElementById("documentsList");
+
+docsBtn.addEventListener("click", () => {
+    openDocumentsModal();
+});
+
+async function loadDocuments() {
+    documentsList.innerHTML = "<p>Lade Dokumente...</p>";
+    
+    try {
+        const response = await fetch("/rag/documents");
+        
+        if (!response.ok) {
+            throw new Error("Fehler beim Laden der Dokumente");
+        }
+        
+        const data = await response.json();
+        const documents = data.documents || [];
+        const totalDocuments = data.total_documents || 0;
+        
+        if (documents.length === 0) {
+            documentsList.innerHTML = `
+                <div class="docs-empty">
+                    <p>Keine Dokumente hochgeladen</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Create document list
+        const tableRows = documents.map((doc) => `
+            <tr>
+                <td>📄 ${escapeHtml(doc.name)}</td>
+                <td>${doc.size} ${doc.size_unit}</td>
+            </tr>
+        `).join("");
+        
+        const docHTML = `
+            <div class="docs-count">
+                📊 ${totalDocuments} Dokument(e) verfügbar
+            </div>
+            <table class="docs-table">
+                <thead>
+                    <tr>
+                        <th>Dateiname</th>
+                        <th>Größe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        `;
+        
+        documentsList.innerHTML = docHTML;
+    } catch (error) {
+        console.error("Fehler beim Laden der Dokumente:", error);
+        documentsList.innerHTML = `
+            <div style="color: #dc2626; padding: 20px; text-align: center;">
+                <strong>Fehler beim Laden der Dokumente</strong><br>
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+    }
+}
+
+function openDocumentsModal() {
+    documentsModal.classList.add("open");
+    loadDocuments();
+}
+
+function closeDocumentsModal(event) {
+    if (event && event.target !== documentsModal) return;
+    documentsModal.classList.remove("open");
+}
+
+// Close modal when pressing Escape
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeDocumentsModal();
+    }
+});
+</script>
+
+</body>
+</html>
